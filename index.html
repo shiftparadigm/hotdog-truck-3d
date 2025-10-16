@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Feature Showcase</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: linear-gradient(135deg, #e8e8e8 0%, #c4c4d4 100%);
+            color: #1a1a1a;
+            overflow-x: hidden;
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content-overlay {
+            position: relative;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        header {
+            padding: 2rem 4rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            pointer-events: all;
+        }
+
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 0 4rem;
+        }
+
+        .hero-content {
+            max-width: 600px;
+        }
+
+        h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #1a1a1a 0%, #4a4a4a 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 1.25rem;
+            color: #4a4a4a;
+            margin-bottom: 3rem;
+            line-height: 1.6;
+        }
+
+        .features-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            pointer-events: all;
+        }
+
+        .feature-btn {
+            background: rgba(255, 255, 255, 0.6);
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            padding: 1.5rem 2rem;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+            width: 450px;
+        }
+
+        .feature-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0,0,0,0.05), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .feature-btn:hover::before {
+            left: 100%;
+        }
+
+        .feature-btn:hover {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(0, 0, 0, 0.3);
+            transform: translateX(8px);
+        }
+
+        .feature-btn.active {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .feature-btn h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            color: #1a1a1a;
+        }
+
+        .feature-btn p {
+            font-size: 0.9rem;
+            color: #4a4a4a;
+            line-height: 1.4;
+        }
+
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            text-align: center;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-top-color: #1a1a1a;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .info-card {
+            position: fixed;
+            bottom: 3rem;
+            right: 4rem;
+            transform: translateY(100px);
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+            padding: 1.5rem 2rem;
+            max-width: 400px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transition: all 0.5s ease;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .info-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .info-card h4 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: #1a1a1a;
+        }
+
+        .info-card p {
+            font-size: 0.95rem;
+            color: #4a4a4a;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            header, .hero {
+                padding: 2rem;
+            }
+
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .subtitle {
+                font-size: 1rem;
+            }
+
+            .feature-btn {
+                padding: 1rem 1.5rem;
+                width: 100%;
+            }
+
+            .info-card {
+                max-width: calc(100% - 4rem);
+                right: 2rem;
+                left: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>Loading Experience...</p>
+    </div>
+
+    <div class="content-overlay">
+        <header>
+            <div class="logo">HOT DOG TRUCK</div>
+        </header>
+
+        <section class="hero">
+            <div class="hero-content">
+                <h1>Street Food Revolution</h1>
+                <p class="subtitle">Experience our mobile culinary masterpiece in stunning 3D detail. Every angle tells a story of flavor and craftsmanship.</p>
+
+                <nav class="features-nav">
+                    <button class="feature-btn active" data-position="front">
+                        <h3>Front View</h3>
+                        <p>Bold branding and inviting service window design</p>
+                    </button>
+                    <button class="feature-btn" data-position="side">
+                        <h3>Side Profile</h3>
+                        <p>Classic food truck silhouette with modern touches</p>
+                    </button>
+                    <button class="feature-btn" data-position="top">
+                        <h3>Bird's Eye View</h3>
+                        <p>Complete layout from wheels to rooftop</p>
+                    </button>
+                    <button class="feature-btn" data-position="detail">
+                        <h3>Service Window</h3>
+                        <p>Where the magic happens - up close and personal</p>
+                    </button>
+                </nav>
+            </div>
+        </section>
+    </div>
+
+    <div class="info-card" id="infoCard">
+        <h4 id="cardTitle"></h4>
+        <p id="cardText"></p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <script>
+        let scene, camera, renderer, model;
+        const container = document.getElementById('canvas-container');
+        const loading = document.getElementById('loading');
+        const infoCard = document.getElementById('infoCard');
+        const cardTitle = document.getElementById('cardTitle');
+        const cardText = document.getElementById('cardText');
+
+        // Humorous descriptions for each view
+        const viewDescriptions = {
+            front: {
+                title: "The Money Maker",
+                text: "This is where hungry customers make eye contact and realize they need a hot dog RIGHT NOW. Notice the strategically placed menu that says 'Yes, we have napkins.'"
+            },
+            side: {
+                title: "The Profile of Excellence",
+                text: "From this angle, you can almost smell the grilled onions. Fun fact: This truck has parallel parked in spots that would make a Smart Car sweat."
+            },
+            top: {
+                title: "The Bird's Perspective",
+                text: "What birds see before they try to steal your lunch. From up here, you can spot all the secret ventilation that keeps the hot dog magic flowing."
+            },
+            detail: {
+                title: "The Service Window of Dreams",
+                text: "This is where culinary dreams are passed through a small opening. The window has witnessed approximately 47,000 'make it extra crispy' requests."
+            }
+        };
+
+        // Camera positions for different views (adjusted for truck)
+        const cameraPositions = {
+            front: { x: 0, y: 2, z: 15 },
+            side: { x: 15, y: 2, z: 8 },
+            top: { x: 0, y: 15, z: 8 },
+            detail: { x: 8, y: 3, z: 12 }
+        };
+
+        // Initialize Three.js scene
+        function init() {
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = null; // Transparent background
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(
+                45,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(0, 2, 15);
+            camera.lookAt(0, 0, 0);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({
+                antialias: true,
+                alpha: true
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+
+            // No controls - camera only moves via buttons
+
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 5);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+
+            const fillLight = new THREE.DirectionalLight(0x4a90e2, 0.3);
+            fillLight.position.set(-5, 0, -5);
+            scene.add(fillLight);
+
+            // Load 3D model
+            loadGLTFModel();
+
+            // Window resize
+            window.addEventListener('resize', onWindowResize);
+
+            // Feature buttons
+            setupFeatureButtons();
+
+            // Start animation
+            animate();
+        }
+
+        // Create a placeholder 3D model (replace with your GLTF model)
+        function createPlaceholderModel() {
+            const group = new THREE.Group();
+
+            // Main body
+            const bodyGeometry = new THREE.BoxGeometry(2, 1, 0.3);
+            const bodyMaterial = new THREE.MeshStandardMaterial({
+                color: 0x2c3e50,
+                metalness: 0.7,
+                roughness: 0.2
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.castShadow = true;
+            body.receiveShadow = true;
+            group.add(body);
+
+            // Screen
+            const screenGeometry = new THREE.PlaneGeometry(1.8, 0.9);
+            const screenMaterial = new THREE.MeshStandardMaterial({
+                color: 0x1a1a2e,
+                emissive: 0x4a90e2,
+                emissiveIntensity: 0.3
+            });
+            const screen = new THREE.Mesh(screenGeometry, screenMaterial);
+            screen.position.z = 0.16;
+            group.add(screen);
+
+            // Camera bump
+            const cameraGeometry = new THREE.CylinderGeometry(0.08, 0.08, 0.15, 32);
+            const cameraMaterial = new THREE.MeshStandardMaterial({
+                color: 0x000000,
+                metalness: 0.9,
+                roughness: 0.1
+            });
+            const cameraModule = new THREE.Mesh(cameraGeometry, cameraMaterial);
+            cameraModule.rotation.x = Math.PI / 2;
+            cameraModule.position.set(0.6, 0.3, 0.23);
+            group.add(cameraModule);
+
+            // Position and add to scene
+            group.position.y = 0;
+            scene.add(group);
+            model = group;
+
+            // Hide loading
+            loading.style.display = 'none';
+        }
+
+        // Load GLTF model
+        function loadGLTFModel() {
+            const loader = new THREE.GLTFLoader();
+            loader.load(
+                'hotdog_truck.glb',
+                (gltf) => {
+                    model = gltf.scene;
+
+                    // Scale and position model
+                    model.scale.set(1, 1, 1);
+                    model.position.set(7, -5, 0);
+                    model.rotation.y = -Math.PI / 4; // 45 degrees to the left
+
+                    // Enable shadows
+                    model.traverse((node) => {
+                        if (node.isMesh) {
+                            node.castShadow = true;
+                            node.receiveShadow = true;
+                        }
+                    });
+
+                    scene.add(model);
+                    loading.style.display = 'none';
+
+                    // Show initial card for front view
+                    setTimeout(() => {
+                        showInfoCard('front');
+                    }, 500);
+
+                    // Log model info for debugging
+                    console.log('Model loaded:', model);
+                    console.log('Model position:', model.position);
+                    console.log('Model scale:', model.scale);
+                },
+                (progress) => {
+                    const percentComplete = (progress.loaded / progress.total * 100).toFixed(0);
+                    console.log(percentComplete + '% loaded');
+                },
+                (error) => {
+                    console.error('Error loading model:', error);
+                    loading.innerHTML = '<p style="color: #ff6b6b;">Failed to load model. Check console for details.</p>';
+                }
+            );
+        }
+
+        // Setup feature button interactions
+        function setupFeatureButtons() {
+            const buttons = document.querySelectorAll('.feature-btn');
+
+            buttons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Update active state
+                    buttons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+
+                    // Get target position
+                    const position = button.dataset.position;
+                    moveCameraToPosition(position);
+                });
+            });
+        }
+
+        // Animate camera to position using GSAP
+        function moveCameraToPosition(positionKey) {
+            const targetPos = cameraPositions[positionKey];
+
+            // Hide card during transition
+            infoCard.classList.remove('visible');
+
+            gsap.to(camera.position, {
+                x: targetPos.x,
+                y: targetPos.y,
+                z: targetPos.z,
+                duration: 1.5,
+                ease: "power2.inOut",
+                onUpdate: () => {
+                    camera.lookAt(0, 0, 0);
+                },
+                onComplete: () => {
+                    // Show card with description after animation
+                    showInfoCard(positionKey);
+                }
+            });
+        }
+
+        // Show info card with text
+        function showInfoCard(positionKey) {
+            const description = viewDescriptions[positionKey];
+            cardTitle.textContent = description.title;
+            cardText.textContent = description.text;
+
+            // Adjust position for side profile
+            if (positionKey === 'side') {
+                infoCard.style.bottom = 'calc(3rem - 20px)';
+            } else {
+                infoCard.style.bottom = '3rem';
+            }
+
+            setTimeout(() => {
+                infoCard.classList.add('visible');
+            }, 200);
+        }
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+
+        // Handle window resize
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Initialize the scene
+        init();
+    </script>
+</body>
+</html>
