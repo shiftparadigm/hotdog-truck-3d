@@ -160,7 +160,7 @@
 
         .info-card {
             position: fixed;
-            bottom: 3rem;
+            bottom: 1rem;
             right: 4rem;
             transform: translateY(100px);
             background: rgba(255, 255, 255, 0.95);
@@ -195,30 +195,32 @@
         @media (max-width: 768px) {
             body {
                 overflow-y: auto;
+                min-height: 100vh;
             }
 
             #canvas-container {
                 position: relative;
-                height: 50vh;
-                top: auto;
-                margin-top: 0;
+                height: 35vh;
+                top: 0;
+                margin: 0;
             }
 
             .content-overlay {
                 position: relative;
+                margin: 0;
             }
 
             header {
-                padding: 1rem;
+                padding: 0.75rem 1rem;
             }
 
             .logo {
-                font-size: 1.2rem;
+                font-size: 1.1rem;
             }
 
             .hero {
                 min-height: auto;
-                padding: 1rem;
+                padding: 0 1rem 1rem;
                 display: block;
             }
 
@@ -227,7 +229,7 @@
             }
 
             h1 {
-                font-size: 1.75rem;
+                font-size: 1.6rem;
                 margin-bottom: 0.5rem;
             }
 
@@ -239,24 +241,25 @@
             .features-nav {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
-                gap: 0.5rem;
+                gap: 0.75rem;
+                margin-bottom: 1rem;
             }
 
             .feature-btn {
-                padding: 0.5rem 0.75rem;
+                padding: 0.75rem;
                 width: 100%;
-                min-height: 60px;
+                min-height: 75px;
                 border-radius: 12px;
             }
 
             .feature-btn h3 {
-                font-size: 0.85rem;
+                font-size: 0.9rem;
                 margin-bottom: 0.25rem;
             }
 
             .feature-btn p {
                 font-size: 0.7rem;
-                line-height: 1.2;
+                line-height: 1.3;
             }
 
             .info-card {
@@ -264,8 +267,7 @@
                 bottom: auto;
                 right: auto;
                 left: auto;
-                margin: 1rem;
-                margin-top: calc(1rem + 30px);
+                margin: 0 1rem 2rem;
                 padding: 1rem;
                 transform: none;
                 max-width: none;
@@ -276,11 +278,11 @@
             }
 
             .info-card h4 {
-                font-size: 0.95rem;
+                font-size: 1rem;
             }
 
             .info-card p {
-                font-size: 0.8rem;
+                font-size: 0.85rem;
             }
         }
     </style>
@@ -367,11 +369,12 @@
         };
 
         // Camera positions for different views (adjusted for truck)
+        // Mobile: orbit around truck position (1.5, -1, 0) at radius 38, keeping Z consistent
         const cameraPositions = isMobile ? {
-            front: { x: 0, y: 2, z: 25 },
-            side: { x: 27, y: 3, z: -14 },
-            top: { x: 0, y: 32, z: 8 },
-            detail: { x: -25, y: 4, z: -12 }
+            front: { x: 2.5, y: 3, z: 38 },
+            side: { x: 39.5, y: 3, z: 0 },
+            top: { x: 1.5, y: 40, z: 20 },  // Adjusted to frame truck higher
+            detail: { x: -28, y: 3, z: 25 }  // Rotated 30° right total
         } : {
             front: { x: 0, y: 2, z: 15 },
             side: { x: 15, y: 2, z: 8 },
@@ -394,8 +397,8 @@
             );
             // Adjust camera for mobile
             if (isMobile) {
-                camera.position.set(0, 2, 25);
-                camera.lookAt(0, 0, 0);
+                camera.position.set(1.5, 3, 38);
+                camera.lookAt(1.5, -5, 0);  // Look at truck X/Z, adjusted Y for framing
             } else {
                 camera.position.set(0, 2, 15);
                 camera.lookAt(0, 0, 0);
@@ -574,10 +577,14 @@
                 ease: "power2.inOut",
                 onUpdate: () => {
                     // Adjust lookAt for mobile views
-                    if (isMobile && positionKey === 'top') {
-                        camera.lookAt(0, -28, 0);
-                    } else if (isMobile && positionKey === 'detail') {
-                        camera.lookAt(0, -4, 0);
+                    if (isMobile) {
+                        if (positionKey === 'top') {
+                            // Bird's eye: look forward (positive Z) to push truck higher on screen
+                            camera.lookAt(1.5, -1, 8);
+                        } else {
+                            // Other views: look slightly down to push truck DOWN on screen
+                            camera.lookAt(1.5, -5, 0);
+                        }
                     } else {
                         camera.lookAt(0, 0, 0);
                     }
@@ -597,9 +604,9 @@
 
             // Adjust position for side profile
             if (positionKey === 'side') {
-                infoCard.style.bottom = 'calc(3rem - 20px)';
+                infoCard.style.bottom = 'calc(1rem - 20px)';
             } else {
-                infoCard.style.bottom = '3rem';
+                infoCard.style.bottom = '1rem';
             }
 
             setTimeout(() => {
