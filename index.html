@@ -369,9 +369,9 @@
         // Camera positions for different views (adjusted for truck)
         const cameraPositions = isMobile ? {
             front: { x: 0, y: 2, z: 25 },
-            side: { x: 25, y: 4, z: -12 },
+            side: { x: 27, y: 3, z: -14 },
             top: { x: 0, y: 32, z: 8 },
-            detail: { x: 27, y: 3, z: -14 }
+            detail: { x: -25, y: 4, z: -12 }
         } : {
             front: { x: 0, y: 2, z: 15 },
             side: { x: 15, y: 2, z: 8 },
@@ -573,9 +573,11 @@
                 duration: 0.75,
                 ease: "power2.inOut",
                 onUpdate: () => {
-                    // Adjust lookAt for mobile top view
+                    // Adjust lookAt for mobile views
                     if (isMobile && positionKey === 'top') {
                         camera.lookAt(0, -28, 0);
+                    } else if (isMobile && positionKey === 'detail') {
+                        camera.lookAt(0, -4, 0);
                     } else {
                         camera.lookAt(0, 0, 0);
                     }
